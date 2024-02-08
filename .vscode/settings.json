@@ -1,0 +1,5 @@
+{
+  "solidity.compileUsingRemoteVersion": "v0.8.20+commit.a1b79de6",
+  "solidity.defaultCompiler": "localFile",
+  "solidity.compileUsingLocalVersion": "/Users/star/Desktop/Programming/smart_contracts/secretish_santa/secrtish_contracts/soljson-v0.8.20+commit.a1b79de6.js"
+}
