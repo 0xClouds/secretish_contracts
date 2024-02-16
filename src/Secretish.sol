@@ -1,5 +1,5 @@
 //SPDX-License-Identifier:MIT
-pragma solidity 0.8.20;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -76,10 +76,19 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 error NOT_ENOUGH_ETHER_SENT();
 error ALREADY_GAVE_A_GIFT();
 
+interface IERC721 {
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) external;
+}
+
 contract Secretish is Ownable, IERC721Receiver {
     event ERC721GiftRecieved(
         address indexed gifter,
-        address indexed operator,
+        address indexed ERC721Contracct,
         uint256 indexed tokenId
     );
     event EtherGiftGiven(address indexed gifter, uint256 indexed value);
@@ -97,9 +106,13 @@ contract Secretish is Ownable, IERC721Receiver {
         address tokenAddress;
     }
 
-    address[] private givers;
+    //Change before pushing
 
-    mapping(address giftGiver => Gift gifts) private addressesToGifts;
+    address[] public givers;
+
+    //Change before pushing
+
+    mapping(address giftGiver => Gift gifts) public addressesToGifts;
 
     constructor(address initialOwner) Ownable(initialOwner) {}
 
@@ -122,18 +135,40 @@ contract Secretish is Ownable, IERC721Receiver {
         );
     }
 
+    function giveERC721(address _contractAddress, uint256 tokenId) public {
+        if (addressesToGifts[msg.sender].value != 0) {
+            revert ALREADY_GAVE_A_GIFT();
+        }
+
+        bytes memory data = abi.encode(_contractAddress);
+
+        IERC721(_contractAddress).safeTransferFrom(
+            msg.sender,
+            address(this),
+            tokenId,
+            data
+        );
+    }
+
     function onERC721Received(
-        address operator,
+        address /*operator*/,
         address from,
         uint256 tokenId,
-        bytes calldata /* data */
+        bytes calldata data
     ) public override returns (bytes4) {
         if (addressesToGifts[from].value != 0) {
             revert ALREADY_GAVE_A_GIFT();
         }
-        emit ERC721GiftRecieved(from, operator, tokenId);
+        address contractAddress = abi.decode(data, (address));
+
+        emit ERC721GiftRecieved(from, contractAddress, tokenId);
         givers.push(from);
-        addressesToGifts[from] = Gift(TokenType.ERC721, tokenId, 1, operator);
+        addressesToGifts[from] = Gift(
+            TokenType.ERC721,
+            tokenId,
+            1,
+            contractAddress
+        );
 
         return IERC721Receiver.onERC721Received.selector;
     }
