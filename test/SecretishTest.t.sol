@@ -57,14 +57,14 @@ contract SecretishTest is Test {
 
     function test_erc721Deposits() public {
         address secretContractAddress = address(secretContract);
-        nftContract.mint(user1, 1);
+        nftContract.mint(user1);
         vm.startPrank(user1);
+        /** You actually dont need the approval because its unimportant */
         nftContract.setApprovalForAll(secretContractAddress, true);
-        nftContract.safeTransferFrom(user1, secretContractAddress, 1);
+        secretContract.giveERC721(address(nftContract), 1);
         (tokenType, tokenId, amount, tokenAddress) = secretContract.getGift(
             user1
         );
-        console.log(uint(tokenType), tokenId, amount, tokenAddress);
         vm.stopPrank();
         assertEq(nftContract.balanceOf(secretContractAddress), 1);
     }
