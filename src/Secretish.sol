@@ -106,13 +106,9 @@ contract Secretish is Ownable, IERC721Receiver {
         address tokenAddress;
     }
 
-    //Change before pushing
+    address[] private givers;
 
-    address[] public givers;
-
-    //Change before pushing
-
-    mapping(address giftGiver => Gift gifts) public addressesToGifts;
+    mapping(address giftGiver => Gift gifts) private addressesToGifts;
 
     constructor(address initialOwner) Ownable(initialOwner) {}
 
@@ -156,6 +152,7 @@ contract Secretish is Ownable, IERC721Receiver {
         uint256 tokenId,
         bytes calldata data
     ) public override returns (bytes4) {
+        //** We need a way to only allow this to be called by the above function and revert if not */
         if (addressesToGifts[from].value != 0) {
             revert ALREADY_GAVE_A_GIFT();
         }
@@ -172,6 +169,8 @@ contract Secretish is Ownable, IERC721Receiver {
 
         return IERC721Receiver.onERC721Received.selector;
     }
+
+    /** We need to randomly choose two people from the array and transfer their gifts then remove from array */
 
     function getGift(
         address giftGiver
